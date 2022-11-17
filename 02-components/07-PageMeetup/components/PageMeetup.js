@@ -23,9 +23,10 @@ export default defineComponent({
   data() {
     return {
       meetup: null,
-      loading: true,
-      errored: false,
-      errorMessage: null,
+      options: {
+        state: null,
+        errorMessage: null,
+      },
     };
   },
 
@@ -33,32 +34,31 @@ export default defineComponent({
     meetupId: {
       immediate: true,
       handler() {
-        this.loading = true;
-        this.errored = false;
-        this.errorMessage = null;
-        this.meetup = null;
+        this.options.state = 'loading';
 
         fetchMeetupById(this.meetupId)
-          .then((meetup) => (this.meetup = meetup))
-          .catch((error) => {
-            this.errored = true;
-            this.errorMessage = error.message;
+          .then((meetup) => {
+            this.options.state = 'loaded';
+            this.meetup = meetup;
           })
-          .finally(() => (this.loading = false));
+          .catch((error) => {
+            this.options.state = 'failed';
+            this.options.errorMessage = error.message;
+          });
       },
     },
   },
 
   template: `
     <div class="page-meetup">
-      <UiContainer v-if="loading">
+      <UiContainer v-if="options.state === 'loading'">
         <UiAlert>Загрузка...</UiAlert>
       </UiContainer>
 
-      <UiContainer v-if="errored">
-        <UiAlert>{{ errorMessage }}</UiAlert>
+      <UiContainer v-if="options.state === 'failed'">
+        <UiAlert>{{ options.errorMessage }}</UiAlert>
       </UiContainer>
 
-      <MeetupView v-if="!loading && !errored" :meetup = meetup />
+      <MeetupView v-if="options.state === 'loaded'" :meetup = meetup />
     </div>`,
 });
