@@ -5,7 +5,6 @@ import MeetupInfo from './MeetupInfo.js';
 import MeetupAgenda from './MeetupAgenda.js';
 import UiAlert from './UiAlert.js';
 import UiContainer from './UiContainer.js';
-import _ from 'lodash';
 
 export default defineComponent({
   name: 'MeetupView',
@@ -28,7 +27,7 @@ export default defineComponent({
 
   computed: {
     isNotEmptyAgenda() {
-      return !_.isEmpty(this.meetup.agenda);
+      return !!this.meetup.agenda?.length;
     },
   },
 
