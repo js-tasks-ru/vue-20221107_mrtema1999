@@ -28,7 +28,7 @@ const App = defineComponent({
     meetupId: {
       immediate: true,
       handler() {
-        fetchMeetupById(15).then(({ title }) => (this.meetupTitle = title));
+        fetchMeetupById(this.meetupId).then(({ title }) => (this.meetupTitle = title));
       },
     },
   },
