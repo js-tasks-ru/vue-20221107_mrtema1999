@@ -13,7 +13,7 @@
           :class="styledDropdown.item"
           role="option"
           type="button"
-          @click="[changeDropdownState(), $emit('update:modelValue', value)]"
+          @click="[changeDropdownState(), selectValue(value)]"
         >
           <ui-icon v-if="icon" :icon="icon" class="dropdown__icon" />
           {{ text }}
@@ -78,7 +78,7 @@ export default {
     },
 
     selectedModelValue() {
-      return this.modelValue !== undefined ? true : false;
+      return this.modelValue !== undefined;
     },
 
     foundedOption() {
@@ -97,6 +97,10 @@ export default {
   methods: {
     changeDropdownState() {
       this.isOpen = !this.isOpen;
+    },
+
+    selectValue(value) {
+      this.$emit('update:modelValue', value);
     },
   },
 };
