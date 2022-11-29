@@ -1,8 +1,8 @@
 <template>
-  <div class="toast" :class="toastStyle">
-    <ui-icon class="toast__icon" :icon="toastIcon" />
-    <p>{{ toastMessage }}</p>
-    <button class="btn" type="button" @click="$emit('closeTost', toastID)">X</button>
+  <div class="toast" :class="`toast_${type}`">
+    <ui-icon class="toast__icon" :icon="`${icon}-circle`" />
+    <p>{{ message }}</p>
+    <button class="btn" type="button" @click="$emit('close')">X</button>
   </div>
 </template>
 
@@ -15,33 +15,20 @@ export default {
   components: { UiIcon },
 
   props: {
-    toastID: {
-      type: Number,
+    message: {
+      type: String,
     },
-    toastData: {
-      type: Object,
+
+    type: {
+      type: String,
     },
-  },
 
-  emits: ['closeTost'],
-
-  computed: {
-    toastStyle() {
-      const { style } = this.toastData;
-
-      return `toast_${style}`;
-    },
-    toastIcon() {
-      const { icon } = this.toastData;
-
-      return `${icon}-circle`;
-    },
-    toastMessage() {
-      const { message } = this.toastData;
-
-      return message;
+    icon: {
+      type: String,
     },
   },
+
+  emits: ['close'],
 };
 </script>
 
