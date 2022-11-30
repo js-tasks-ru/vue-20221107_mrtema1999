@@ -1,24 +1,29 @@
 <template>
-  <div class="dropdown" :class="styledDropdown.dropdown">
-    <button type="button" class="dropdown__toggle" :class="styledDropdown.toggle" @click="changeDropdownState">
+  <div class="dropdown" :class="{ dropdown_opened: isOpen }">
+    <button
+      type="button"
+      class="dropdown__toggle"
+      :class="{ dropdown__toggle_icon: hasIcons }"
+      @click="changeDropdownState"
+    >
       <ui-icon v-if="hasIcon" :icon="optionData.icon" class="dropdown__icon" />
-      <span v-if="selectedModelValue">{{ optionData.text }}</span>
+      <span v-if="modelValue">{{ optionData.text }}</span>
       <span v-else>{{ title }}</span>
     </button>
 
     <div v-show="isOpen" class="dropdown__menu" role="listbox">
-      <template v-for="{ value, text, icon } in options" :key="value">
-        <button
-          class="dropdown__item"
-          :class="styledDropdown.item"
-          role="option"
-          type="button"
-          @click="[changeDropdownState(), selectValue(value)]"
-        >
-          <ui-icon v-if="icon" :icon="icon" class="dropdown__icon" />
-          {{ text }}
-        </button>
-      </template>
+      <button
+        v-for="{ value, text, icon } in options"
+        :key="value"
+        class="dropdown__item"
+        :class="{ dropdown__item_icon: hasIcons }"
+        role="option"
+        type="button"
+        @click="select(value)"
+      >
+        <ui-icon v-if="icon" :icon="icon" class="dropdown__icon" />
+        {{ text }}
+      </button>
     </div>
   </div>
 </template>
@@ -56,29 +61,13 @@ export default {
   },
 
   computed: {
-    styledDropdown() {
-      return {
-        dropdown: {
-          dropdown_opened: this.isOpen,
-        },
-        toggle: {
-          dropdown__toggle_icon: this.hasIcons,
-        },
-        item: {
-          dropdown__item_icon: this.hasIcons,
-        },
-      };
-    },
-
     optionData() {
-      return {
-        text: this.foundedOption?.text,
-        icon: this.foundedOption?.icon,
-      };
-    },
+      const option = this.foundedOption;
 
-    selectedModelValue() {
-      return this.modelValue !== undefined;
+      return {
+        text: option?.text,
+        icon: option?.icon,
+      };
     },
 
     foundedOption() {
@@ -99,7 +88,8 @@ export default {
       this.isOpen = !this.isOpen;
     },
 
-    selectValue(value) {
+    select(value) {
+      this.changeDropdownState();
       this.$emit('update:modelValue', value);
     },
   },

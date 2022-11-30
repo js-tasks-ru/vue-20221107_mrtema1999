@@ -1,8 +1,13 @@
 <template>
   <ui-toasts>
-    <template v-for="[toastID, toastData] in toasts" :key="toastID">
-      <ui-toast :toastID="toastID" :toastData="toastData" @closeTost="closeTost" />
-    </template>
+    <ui-toast
+      v-for="[id, { message, type, icon }] in toasts"
+      :key="id"
+      :message="message"
+      :type="type"
+      :icon="icon"
+      @close="close(id)"
+    />
   </ui-toasts>
 </template>
 
@@ -25,40 +30,37 @@ export default {
     success(message) {
       const data = {
         message,
-        style: 'success',
+        type: 'success',
         icon: 'check',
         showTime: 5000,
       };
 
-      this.showTost(data);
+      this.show(data);
     },
 
     error(message) {
       const data = {
         message,
-        style: 'error',
+        type: 'error',
         icon: 'alert',
         showTime: 5000,
       };
 
-      this.showTost(data);
+      this.show(data);
     },
 
-    showTost(data) {
-      const tostID = setTimeout(() => {
-        this.closeTost(tostID);
+    show(data) {
+      const id = setTimeout(() => {
+        this.close(id);
       }, data.showTime);
 
-      this.toasts.set(tostID, data);
+      this.toasts.set(id, data);
     },
 
-    closeTost(tostID) {
-      this.toasts.delete(tostID);
-      clearTimeout(tostID);
+    close(id) {
+      this.toasts.delete(id);
+      clearTimeout(id);
     },
   },
 };
 </script>
-
-<style>
-</style>
