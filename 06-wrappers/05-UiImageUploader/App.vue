@@ -21,6 +21,7 @@ export default {
   data() {
     return {
       image: 'https://course-vue.javascript.ru/api/images/1',
+      // image: undefined,
       uploadImage,
     };
   },

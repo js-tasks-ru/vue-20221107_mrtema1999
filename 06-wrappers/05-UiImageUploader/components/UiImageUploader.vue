@@ -1,8 +1,22 @@
 <template>
   <div class="image-uploader">
-    <label class="image-uploader__preview image-uploader__preview-loading" style="--bg-url: url('/link.jpeg')">
-      <span class="image-uploader__text">Загрузить изображение</span>
-      <input type="file" accept="image/*" class="image-uploader__input" />
+    <label
+      class="image-uploader__preview"
+      :class="{ 'image-uploader__preview-loading': isProcessing }"
+      :style="isProcessed ? `--bg-url: url(${preview})` : '--bg-url'"
+    >
+      <span class="image-uploader__text">{{ description }}</span>
+      <component
+        :is="isProcessed ? 'button' : 'input'"
+        ref="fileInput"
+        type="file"
+        v-bind="$attrs"
+        accept="image/*"
+        :disabled="isProcessing"
+        class="image-uploader__input"
+        @click="removeImage"
+        @change="uploadImage"
+      />
     </label>
   </div>
 </template>
@@ -10,6 +24,80 @@
 <script>
 export default {
   name: 'UiImageUploader',
+
+  inheritAttrs: false,
+
+  props: {
+    preview: String,
+    uploader: Function,
+  },
+
+  emits: ['upload', 'error', 'remove', 'select'],
+
+  data() {
+    return {
+      state: null,
+    };
+  },
+
+  computed: {
+    isProcessing() {
+      return this.state === 'processing';
+    },
+
+    isProcessed() {
+      return this.state === 'processed';
+    },
+
+    description() {
+      const descriptions = {
+        filling: 'Загрузить изображение',
+        processing: 'Загрузка...',
+        processed: 'Удалить изображение',
+      };
+
+      return descriptions[this.state];
+    },
+  },
+
+  created() {
+    this.state = this.preview ? 'processed' : 'filling';
+    this.image = this.preview ?? null;
+  },
+
+  methods: {
+    uploadImage(event) {
+      const [file] = event.target.files;
+
+      this.$emit('select', file);
+
+      if (this.uploader) {
+        this.state = 'processing';
+        this.asyncLoader(file);
+      } else {
+        this.$emit('upload', { image: URL.createObjectURL(file) });
+        this.state = 'processed';
+      }
+    },
+
+    removeImage() {
+      this.$emit('remove');
+      this.state = 'filling';
+    },
+
+    asyncLoader(file) {
+      this.uploader(file)
+        .then((data) => {
+          this.$emit('upload', data);
+          this.state = 'processed';
+        })
+        .catch((error) => {
+          this.$emit('error', error);
+          this.$refs['fileInput'].value = '';
+          this.state = 'filling';
+        });
+    },
+  },
 };
 </script>
 
