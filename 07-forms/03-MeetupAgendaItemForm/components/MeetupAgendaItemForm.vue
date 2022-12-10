@@ -1,37 +1,49 @@
 <template>
   <fieldset class="agenda-item-form">
-    <button type="button" class="agenda-item-form__remove-button">
+    <button type="button" class="agenda-item-form__remove-button" @click.prevent="$emit('remove')">
       <ui-icon icon="trash" />
     </button>
 
     <ui-form-group>
-      <ui-dropdown title="Тип" :options="$options.agendaItemTypeOptions" name="type" />
+      <ui-dropdown v-model="localItem.type" title="Тип" :options="$options.agendaItemTypeOptions" name="type" />
     </ui-form-group>
 
     <div class="agenda-item-form__row">
       <div class="agenda-item-form__col">
         <ui-form-group label="Начало">
-          <ui-input type="time" placeholder="00:00" name="startsAt" />
+          <ui-input
+            v-model="localItem.startsAt"
+            type="time"
+            placeholder="00:00"
+            name="startsAt"
+            @change="calculateEndsAt"
+          />
         </ui-form-group>
       </div>
       <div class="agenda-item-form__col">
         <ui-form-group label="Окончание">
-          <ui-input type="time" placeholder="00:00" name="endsAt" />
+          <ui-input
+            v-model="localItem.endsAt"
+            type="time"
+            placeholder="00:00"
+            name="endsAt"
+            @change.prevent="calculateInterval"
+          />
         </ui-form-group>
       </div>
     </div>
 
-    <ui-form-group label="Тема">
-      <ui-input name="title" />
+    <ui-form-group :label="titleDescription">
+      <ui-input v-model="localItem.title" name="title" />
     </ui-form-group>
-    <ui-form-group label="Докладчик">
-      <ui-input name="speaker" />
+    <ui-form-group v-if="isTalk" label="Докладчик">
+      <ui-input v-model="localItem.speaker" name="speaker" />
     </ui-form-group>
-    <ui-form-group label="Описание">
-      <ui-input multiline name="description" />
+    <ui-form-group v-if="isTalk || isOther" label="Описание">
+      <ui-input v-model="localItem.description" multiline name="description" />
     </ui-form-group>
-    <ui-form-group label="Язык">
-      <ui-dropdown title="Язык" :options="$options.talkLanguageOptions" name="language" />
+    <ui-form-group v-if="isTalk" label="Язык">
+      <ui-dropdown v-model="localItem.language" title="Язык" :options="$options.talkLanguageOptions" name="language" />
     </ui-form-group>
   </fieldset>
 </template>
@@ -88,6 +100,96 @@ export default {
     agendaItem: {
       type: Object,
       required: true,
+    },
+  },
+
+  emits: ['update:agendaItem', 'remove'],
+
+  data() {
+    return {
+      localItem: { ...this.agendaItem },
+      interval: null,
+    };
+  },
+
+  computed: {
+    isTalk() {
+      return this.localItem.type === 'talk';
+    },
+
+    isOther() {
+      return this.localItem.type === 'other';
+    },
+
+    titleDescription() {
+      switch (this.localItem.type) {
+        case 'talk':
+          return 'Тема';
+        case 'other':
+          return 'Заголовок';
+        default:
+          return 'Нестандартный текст (необязательно)';
+      }
+    },
+  },
+
+  watch: {
+    localItem: {
+      deep: true,
+      handler(newValue) {
+        this.$emit('update:agendaItem', { ...newValue });
+      },
+    },
+  },
+
+  created() {
+    this.calculateInterval();
+  },
+
+  methods: {
+    calculateEndsAt() {
+      const { startsAt } = this.localItem;
+      const start = this.parse(startsAt);
+
+      const endsAt = {
+        hours: start.hours + this.interval.hours,
+        minutes: start.minutes + this.interval.minutes,
+      };
+
+      this.localItem.endsAt = this.format(this.normalize(endsAt));
+    },
+
+    calculateInterval() {
+      const { startsAt, endsAt } = this.localItem;
+      const start = this.parse(startsAt);
+      const end = this.parse(endsAt);
+
+      this.interval = {
+        hours: end.hours - start.hours,
+        minutes: end.minutes - start.minutes,
+      };
+    },
+
+    parse(value) {
+      const separator = ':';
+      const [hours, minutes] = value.split(separator);
+
+      return {
+        hours: +hours,
+        minutes: +minutes,
+      };
+    },
+
+    normalize(value) {
+      return {
+        hours: value.hours % 24,
+        minutes: value.minutes % 60,
+      };
+    },
+
+    format(value) {
+      const { hours, minutes } = value;
+      return `${String(hours).padStart(2, 0)}:${String(minutes).padStart(2, 0)}`;
     },
   },
 };

@@ -1,17 +1,19 @@
-<!-- STUB: ЭТО ЗАГЛУШКА ДЛЯ РУЧНОГО ТЕСТИРОВАНИЯ -->
-<!-- ВЫ МОЖЕТЕ ИСПОЛЬЗОВАТЬ ПОЛНУЮ ВЕРСИЮ КОМПОНЕНТА, ЕСЛИ УЖЕ РЕАЛИЗОВАЛИ ЕГО -->
-
 <template>
   <div class="image-uploader">
-    <label class="image-uploader__preview" :style="src && `--bg-url: url('${src}')`" @click.stop.prevent="handleClick">
-      <span class="image-uploader__text">{{ src ? 'Удалить' : 'Загрузить изображение' }}</span>
+    <label
+      class="image-uploader__preview"
+      :class="{ 'image-uploader__preview-loading': isProcessing }"
+      :style="isProcessed ? `--bg-url: url(${localImage})` : '--bg-url'"
+    >
+      <span class="image-uploader__text">{{ description }}</span>
       <input
-        ref="input"
+        ref="fileInput"
         type="file"
+        v-bind="$attrs"
         accept="image/*"
         class="image-uploader__input"
-        v-bind="$attrs"
-        @change="mockFileSelect"
+        @click="remove"
+        @change.prevent="select"
       />
     </label>
   </div>
@@ -20,47 +22,66 @@
 <script>
 export default {
   name: 'UiImageUploader',
+
   inheritAttrs: false,
 
   props: {
-    uploader: {
-      type: Function,
-    },
-
-    preview: {
-      type: String,
-    },
+    preview: String,
+    uploader: Function,
   },
 
-  emits: ['upload', 'select', 'error', 'remove'],
+  emits: ['remove', 'select'],
 
   data() {
     return {
-      src: this.preview,
+      state: this.preview ? 'processed' : 'filling',
+      localImage: this.preview ? this.preview : null,
     };
   },
 
+  computed: {
+    isProcessing() {
+      return this.state === 'processing';
+    },
+
+    isProcessed() {
+      return this.state === 'processed';
+    },
+
+    description() {
+      const descriptions = {
+        filling: 'Загрузить изображение',
+        processing: 'Загрузка...',
+        processed: 'Удалить изображение',
+      };
+
+      return descriptions[this.state];
+    },
+  },
+
   methods: {
-    mockFileSelect() {
-      this.src = 'https://course-vue.javascript.ru/api/images/1';
-      const file = new File(['abc'], 'abc.jpeg', {
-        type: 'image/jpeg',
-      });
-      this.$emit('select', this.$refs.input.files[0] || file);
+    select(event) {
+      const [file] = event.target.files;
+      this.localImage = URL.createObjectURL(file);
+
+      this.$emit('select', this.localImage);
+      this.changeState('processed');
     },
 
-    mockRemoveFile() {
-      this.src = null;
-      this.$refs.input.value = '';
-      this.$emit('remove');
-    },
+    remove(event) {
+      if (this.state === 'processed') {
+        event.preventDefault();
 
-    handleClick() {
-      if (this.src && this.src !== this.preview) {
-        this.mockRemoveFile();
-      } else {
-        this.mockFileSelect();
+        this.localImage = null;
+        this.$refs['fileInput'].value = '';
+
+        this.$emit('remove');
+        this.changeState('filling');
       }
+    },
+
+    changeState(state) {
+      this.state = state;
     },
   },
 };
