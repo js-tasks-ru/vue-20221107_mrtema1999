@@ -31,16 +31,6 @@ export default {
     };
   },
 
-  watch: {
-    messages: {
-      immediate: true,
-      deep: true,
-      handler() {
-        this.scrollToLastInput();
-      },
-    },
-  },
-
   methods: {
     handleSendSubmit() {
       this.send();
@@ -52,6 +42,7 @@ export default {
         text: this.newMessage,
       });
       this.newMessage = '';
+      this.scrollToLastInput();
     },
 
     scrollToLastInput() {
