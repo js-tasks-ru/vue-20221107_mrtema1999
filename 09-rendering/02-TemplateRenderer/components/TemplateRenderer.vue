@@ -21,9 +21,9 @@ export default {
     },
   },
 
-  render() {
-    return h(
-      defineComponent({
+  computed: {
+    ResultComponent() {
+      return defineComponent({
         components: this.components,
         props: {
           bindings: {
@@ -32,9 +32,12 @@ export default {
           },
         },
         render: compile(this.template),
-      }),
-      { bindings: this.bindings },
-    );
+      });
+    },
+  },
+
+  render() {
+    return h(this.ResultComponent, { bindings: this.bindings });
   },
 };
 </script>
