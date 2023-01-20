@@ -28,6 +28,7 @@ for (const year of [2022, 2023]) {
 
 const meetups = dates.map((dateISO, index) => {
   const date = new Date(dateISO);
+
   return {
     id: index,
     date: +date,
